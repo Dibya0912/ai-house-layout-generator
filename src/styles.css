@@ -1,0 +1,5 @@
+/* SvgCanvas helpers */
+.canvas { flex:1; min-width:420px; color:#111; }
+.canvas button { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:#111; color:#fff; }
+.canvas button:hover { opacity:0.9; }
+.canvas .controls { display:flex; gap:8px; align-items:center; }
