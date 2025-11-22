@@ -6,14 +6,15 @@ export default function InputPanel({onGenerate}) {
   const [beds, setBeds] = useState(2);
   const [baths, setBaths] = useState(1);
   const [orientation, setOrientation] = useState('north');
+  const [variants, setVariants] = useState(4);
   const [error, setError] = useState('');
 
   function validate() {
     if (!width || !height) return 'Width and height are required';
-    if (isNaN(width) || isNaN(height)) return 'Width and height must be numbers';
     if (width < 4 || height < 3) return 'Minimum dimensions: width >= 4m, height >= 3m';
     if (beds < 1 || beds > 6) return 'Bedrooms must be between 1 and 6';
     if (baths < 1 || baths > 4) return 'Bathrooms must be between 1 and 4';
+    if (variants < 1 || variants > 12) return 'Variants must be 1..12';
     return '';
   }
 
@@ -22,13 +23,12 @@ export default function InputPanel({onGenerate}) {
     setError(err);
     if (err) return;
     const spec = { width: Number(width), height: Number(height), beds: Number(beds), baths: Number(baths), orientation };
-    if (typeof onGenerate === 'function') onGenerate(spec);
+    if (typeof onGenerate === 'function') onGenerate(spec, Number(variants));
   }
 
   return (
     <div className="panel">
       <h3>Inputs</h3>
-
       <label>Width (m)
         <input type="number" value={width} min="1" onChange={e=>setWidth(e.target.value)} />
       </label>
@@ -54,9 +54,13 @@ export default function InputPanel({onGenerate}) {
         </select>
       </label>
 
+      <label>Variants
+        <input type="number" value={variants} min="1" max="12" onChange={e=>setVariants(e.target.value)} />
+      </label>
+
       {error && <div style={{color:'#ff6b6b', marginTop:8}}>{error}</div>}
 
-      <button onClick={handleClick} style={{marginTop:10}}>Generate Layout</button>
+      <button onClick={handleClick} style={{marginTop:10}}>Generate Variants</button>
     </div>
   );
 }
