@@ -1,86 +1,136 @@
-# AI House Layout Generator
+🚀 AI House Layout Generator
 
-An AI-based tool that generates simple 2D house floor plans using smart layout logic.  
-Built with **React + Vite** and SVG rendering.
+An AI-powered 2D house layout generator that creates smart, structured, optimized floor plans with multiple variants, scoring, zooming, and export features.
+Built using React + Vite and rendered using clean SVG.
 
+🌟 Project Progress Timeline (Day 1 → Day 4)
 ✅ Day 1 — Project Setup + First Working Layout
 ✔️ Completed Tasks
 
 React + Vite setup complete
 
-Basic folder & component structure ready
+Base project structure created
 
-UI components added:
+Components added:
 
 InputPanel
 
 SvgCanvas
 
-Basic Layout Engine created (Living Room, Bedrooms, Kitchen, Bath)
+Basic layout engine:
 
-First SVG floor-plan rendering successfully displayed
+Living Room
 
-Download SVG working
+Bedrooms
+
+Kitchen
+
+Bathroom
+
+First SVG floor-plan rendering done
+
+Working Download SVG button
 
 ⭐ Outcome
 
-Project successfully running with the first functional layout.
+The project runs successfully with a fully functional initial layout.
 
 ✅ Day 2 — Multi-Variant Generator + Scoring Engine
 ✔️ Completed Tasks
 
-Added generateVariants() to create multiple layout possibilities
+Implemented generateVariants() to produce multiple layout options
 
 Added scoring system to rank layouts
 
-VariantsPanel added to show layout thumbnails
+Added VariantsPanel to display all variant thumbnails
 
-Clicking a thumbnail updates the main layout
+Selecting a thumbnail updates the main layout instantly
 
-Auto-selects the highest-score layout
+Auto-selects highest scored layout
 
-Full wiring: App → InputPanel → Layout Engine → VariantsPanel
+All wiring connected:
+App → InputPanel → LayoutEngine → VariantsPanel
 
 ⭐ Outcome
 
-User can generate multiple floor plan options and choose the best one.
+Users can generate multiple floor-plan options and easily pick the best one.
 
 ✅ Day 3 — Zoom System + Responsive SVG + PNG Export
 ✔️ Completed Tasks
 
-Added auto scale-to-fit SVG inside a container
+Added auto scale-to-fit SVG inside responsive container
 
 Added Zoom In / Zoom Out / Reset buttons
 
-Added SVG preserveAspectRatio for clean scaling
+Added preserveAspectRatio for perfect scaling
 
 Added Download PNG (SVG → Canvas → PNG)
 
-Improved UI responsiveness and scrolling
+Enhanced UI responsiveness & scroll behavior
 
-Updated SvgCanvas.jsx and styles.css accordingly
+Updated:
+
+SvgCanvas.jsx
+
+styles.css
 
 ⭐ Outcome
 
-Viewing layouts feels professional: smooth zoom, clean scaling, and export available in both SVG & PNG.
+Floor-plan viewing becomes smooth, professional, and ready for real-world use.
 
 ✅ Day 4 — Advanced Variants Panel (Scores + Tooltip + Highlight)
 ✔️ Completed Tasks
 
-Added score badges on every variant thumbnail
+Added score badges on each variant thumbnail
 
-Implemented hover tooltips explaining why the variant scored high/low
+Implemented hover tooltips showing scoring explanation
 
-Added selected variant highlight (glow + bold border + label)
+Improved selected variant highlight (glow + border + badge)
 
-Improved 2-column clean grid layout
+Better 2-column grid layout
 
-Better UX for variant selection
+Cleaner and more usable interface
 
-Updated VariantsPanel.jsx with tooltip logic & badges
+Updated VariantsPanel.jsx with scoring + tooltip logic
 
 ⭐ Outcome
 
-The variants panel now looks professional & interview-ready.
-Users can visually compare layouts, understand scoring reasons, and select the best one easily.
+Variants panel now feels premium & interview-ready.
+Users can visually compare layouts, understand scores, and pick the best one confidently.
 
+🖥️ Tech Stack
+
+React + Vite (Frontend)
+
+SVG (Rendering)
+
+JavaScript (Custom Smart Layout Logic)
+
+CSS (Minimal custom styling)
+
+Git & GitHub (Version control)
+
+🔧 Run Locally
+npm install
+npm run dev
+
+
+App runs at:
+http://localhost:5173
+
+🎯 Upcoming Days (Planned)
+
+✔ Day 5 — Small-room legend + label fix
+
+✔ Day 6 — Save/Load project (LocalStorage)
+
+✔ Day 7 — AI-enhanced layout suggestions
+
+✔ Day 8 — Auto furniture placement (lightweight)
+
+✔ Day 9 — Export as High-Quality PDF
+
+⭐ Final Thoughts
+
+This daily-progress-based project is designed to show consistent development, clean features, and strong front-end engineering.
+Perfect for portfolio, internship interviews, and resume visibility.
