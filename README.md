@@ -63,3 +63,4 @@ Updated SvgCanvas.jsx and styles.css accordingly
 ⭐ Outcome
 
 Viewing layouts feels professional: smooth zoom, clean scaling, and export available in both SVG & PNG.
+
