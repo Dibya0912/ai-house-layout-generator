@@ -9,132 +9,155 @@
 An AI-powered 2D house layout generator that creates smart, structured, optimized floor plans with multiple variants, scoring, zooming, and export features.
 Built using React + Vite and rendered using clean SVG.
 
-🌟 Project Progress Timeline (Day 1 → Day 4)
+🌟 Project Progress Timeline (Day 1 → Day 5)
 ✅ Day 1 — Project Setup + First Working Layout
-✔️ Completed Tasks
 
-React + Vite setup complete
+Completed
+
+React + Vite setup completed
 
 Base project structure created
 
-Components added:
+Core components added:
 
 InputPanel
 
 SvgCanvas
 
-Basic layout engine:
+Basic layout engine implemented (Living, Bedrooms, Kitchen, Bath)
 
-Living Room
+First SVG floor-plan rendering displayed
 
-Bedrooms
+Download SVG button working
 
-Kitchen
-
-Bathroom
-
-First SVG floor-plan rendering done
-
-Working Download SVG button
-
-⭐ Outcome
-
-The project runs successfully with a fully functional initial layout.
+Outcome: Project runs successfully and renders a working layout.
 
 ✅ Day 2 — Multi-Variant Generator + Scoring Engine
-✔️ Completed Tasks
 
-Implemented generateVariants() to produce multiple layout options
+Completed
 
-Added scoring system to rank layouts
+generateVariants() produces multiple layout options
 
-Added VariantsPanel to display all variant thumbnails
+Scoring engine ranks layouts by simple heuristics (placement, overlap, compactness)
 
-Selecting a thumbnail updates the main layout instantly
+VariantsPanel shows thumbnails of variants
 
-Auto-selects highest scored layout
+Clicking a thumbnail updates the main layout
 
-All wiring connected:
-App → InputPanel → LayoutEngine → VariantsPanel
+Auto-selects the highest-scoring variant
 
-⭐ Outcome
+Data flow: App → InputPanel → LayoutEngine → VariantsPanel
 
-Users can generate multiple floor-plan options and easily pick the best one.
+Outcome: Users can generate multiple floor-plan options and choose the best one.
 
 ✅ Day 3 — Zoom System + Responsive SVG + PNG Export
-✔️ Completed Tasks
 
-Added auto scale-to-fit SVG inside responsive container
+Completed
 
-Added Zoom In / Zoom Out / Reset buttons
+SVG scales-to-fit inside a responsive container
 
-Added preserveAspectRatio for perfect scaling
+Zoom In / Zoom Out / Reset controls added
 
-Added Download PNG (SVG → Canvas → PNG)
+preserveAspectRatio="xMidYMid meet" used for clean scaling
 
-Enhanced UI responsiveness & scroll behavior
+Download PNG (SVG → Canvas → PNG) implemented
 
-Updated:
+Improved UI responsiveness and scroll behavior
 
-SvgCanvas.jsx
+Files updated: SvgCanvas.jsx, styles.css
 
-styles.css
-
-⭐ Outcome
-
-Floor-plan viewing becomes smooth, professional, and ready for real-world use.
+Outcome: Viewing layouts is smooth and exportable to PNG.
 
 ✅ Day 4 — Advanced Variants Panel (Scores + Tooltip + Highlight)
-✔️ Completed Tasks
 
-Added score badges on each variant thumbnail
+Completed
 
-Implemented hover tooltips showing scoring explanation
+Score badges on each variant thumbnail
 
-Improved selected variant highlight (glow + border + badge)
+Hover tooltips explaining scoring reasons (e.g., kitchen location, overlap penalty)
 
-Better 2-column grid layout
+Selected variant highlight (glow + bold border + badge)
 
-Cleaner and more usable interface
+Clean 2-column grid layout for thumbnails
 
-Updated VariantsPanel.jsx with scoring + tooltip logic
+File updated: VariantsPanel.jsx
 
-⭐ Outcome
+Outcome: Variants panel feels premium and helps users compare options quickly.
 
-Variants panel now feels premium & interview-ready.
-Users can visually compare layouts, understand scores, and pick the best one confidently.
+✅ Day 5 — Small-room label fix & legend (UI polish)
 
-🖥️ Tech Stack
+Completed
 
-React + Vite (Frontend)
+If a room is too small to contain inline text, label is shown in a side legend or on hover
 
-SVG (Rendering)
+Improved label contrast and font-weight for readability
 
-JavaScript (Custom Smart Layout Logic)
+Small-room legend area added below the SVG (shows short labels and dimensions)
 
-CSS (Minimal custom styling)
+Minor layout tweaks to ensure labels never overlap borders and remain accessible on zoom
 
-Git & GitHub (Version control)
+Files updated: SvgCanvas.jsx (label handling), styles.css (legend styles)
+
+Outcome: All room labels are readable even on small rooms; UX improved for clarity and accessibility.
+
+🧩 Tech Stack
+
+Frontend: React + Vite
+
+Rendering: SVG (clean vector output)
+
+Logic: Custom JS layout engine (src/utils/layoutEngine.js)
+
+Styling: Lightweight CSS (src/styles.css)
+
+Version Control: Git & GitHub
 
 🔧 Run Locally
+# install dependencies
 npm install
+
+# start dev server
 npm run dev
 
 
-App runs at:
+Open the app at:
 http://localhost:5173
 
-🎯 Upcoming Days (Planned)
+⚙️ Main Features (so far)
 
-✔ Day 5 — Small-room legend + label fix
+Generate multi-variant floorplans from simple inputs (width, height, bedrooms, bathrooms, orientation)
 
-✔ Day 6 — Save/Load project (LocalStorage)
+Layout scoring and automatic best-variant selection
 
-✔ Day 7 — AI-enhanced layout suggestions
+Thumbnail gallery of variants with score badges and tooltips
 
-✔ Day 8 — Auto furniture placement (lightweight)
+Responsive SVG with scale-to-fit + zoom controls
 
-✔ Day 9 — Export as High-Quality PDF
+Export to SVG and PNG
+
+Small-room labeling fixes: inline labels, hover labels, and side legend
+
+Save / Load project (planned / partially implemented in dev branch)
+
+📁 Repo & Branches
+
+main — stable snapshot (first day)
+
+dev — active development branch (daily commits, features in progress)
+
+Repo: https://github.com/Dibya0912/ai-house-layout-generator (your repository)
+
+🔭 Planned Roadmap (short)
+
+Day 6: Save / Load project (localStorage) — restore spec + selected variant
+
+Day 7: AI-enhanced layout suggestions (ML-backed heuristics)
+
+Day 8: Auto furniture placement (lightweight presets)
+
+Day 9: High-quality PDF export (SVG → PDF pipeline)
+
+Polish: keyboard navigation, thumbnails scores on UI, improved tests + README screenshots/GIFs
 
 ⭐ Final Thoughts
 
