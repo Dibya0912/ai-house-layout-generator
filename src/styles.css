@@ -1,5 +1,223 @@
-/* SvgCanvas helpers */
-.canvas { flex:1; min-width:420px; color:#111; }
-.canvas button { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:#111; color:#fff; }
-.canvas button:hover { opacity:0.9; }
-.canvas .controls { display:flex; gap:8px; align-items:center; }
+/* ---------- GLOBAL / THEME ---------- */
+:root{
+  --bg:#1f1f1f;
+  --panel:#f2f2f2;
+  --muted:#999;
+  --accent:#06b6d4;
+  --card-bg:#ffffff;
+  --btn-bg:#111;
+  --btn-color:#fff;
+  --radius:8px;
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color:#eee;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- APP LAYOUT ---------- */
+.app {
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+
+/* header */
+header{
+  background:#111;
+  color:#fff;
+  padding:28px 24px;
+  text-align:center;
+}
+header h1{
+  margin:0;
+  font-size:40px;
+  letter-spacing:0.2px;
+}
+
+/* main area: left input column, center canvas, right variants */
+.main{
+  display:flex;
+  gap:18px;
+  padding:20px;
+  align-items:start;
+  justify-content:flex-start;
+}
+
+/* left column: inputs + ai advisor */
+.panel-left{
+  width:320px;                /* fixed left panel */
+  min-width:260px;
+  color:#ddd;
+  padding:12px;
+  border-radius:var(--radius);
+  background: transparent;
+}
+
+/* center canvas area */
+.canvas {
+  flex:1;                     /* fill remaining space */
+  min-width:480px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  align-items:center;
+  color:#111;
+}
+
+/* right column: variants thumbnails */
+.variants-panel{
+  width:220px;                /* fixed right panel */
+  min-width:200px;
+  padding:12px;
+  border-radius:var(--radius);
+  background: transparent;
+  color:#ddd;
+}
+
+/* footer */
+footer{
+  background:#111;
+  color:#fff;
+  text-align:center;
+  padding:10px 12px;
+}
+
+/* ---------- FORM ELEMENTS ---------- */
+label{display:block; font-size:13px; color:#d6d6d6; margin:10px 0 6px}
+input[type="text"], input[type="number"], select {
+  width:100%;
+  padding:8px 10px;
+  border-radius:6px;
+  border:1px solid rgba(255,255,255,0.06);
+  background: #222;
+  color:#fff;
+  outline:none;
+  font-size:14px;
+}
+input[type="number"]::-webkit-inner-spin-button {opacity:0.6}
+
+.small { width:64px; display:inline-block; margin-right:8px; }
+
+/* buttons */
+button{
+  border:none;
+  background:var(--btn-bg);
+  color:var(--btn-color);
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  box-shadow: none;
+}
+button:hover{opacity:0.92}
+.controls-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* secondary style for download etc (dark button already used) */
+.btn-outline {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.08);
+  color:#eee;
+}
+
+/* ---------- SVG WRAPPER ---------- */
+.svg-wrapper {
+  overflow:auto;
+  width:100%;
+  max-width:880px;
+  max-height:640px;
+  border-radius:10px;
+  background:var(--card-bg);
+  padding:12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* inside the wrapper: ensure SVG shows as block */
+.svg-wrapper svg{ display:block }
+
+/* scale controls area above the svg */
+.zoom-bar{ display:flex; gap:12px; align-items:center; margin-bottom:6px }
+.zoom-info{ color: #c2c2c2; font-size:13px }
+
+/* legend */
+.legend-box{
+  margin-top:10px;
+  padding:10px;
+  background:var(--card-bg);
+  border-radius:8px;
+  color:#222;
+  font-size:13px;
+  border:1px solid #eee;
+}
+
+/* ---------- VARIANTS / THUMBNAILS ---------- */
+.thumbs-grid{ display:grid; grid-template-columns:1fr; gap:10px }
+
+/* a thumbnail button that contains raw SVG html */
+.variant-item{
+  position:relative;
+  padding:6px;
+  border-radius:8px;
+  background:#fff;
+  cursor:pointer;
+  border:1px solid rgba(0,0,0,0.12);
+  overflow:hidden;
+  height:84px;
+}
+
+/* selected */
+.variant-selected{
+  box-shadow: 0 0 0 3px rgba(6,182,212,0.12);
+  border-color: var(--accent);
+}
+
+/* score badge */
+.variant-score {
+  position:absolute;
+  right:6px;
+  top:6px;
+  background:rgba(0,0,0,0.75);
+  color:#fff;
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:700;
+}
+
+/* tooltip-ish explanation area inside thumbnail */
+.variant-tooltip {
+  display:none;
+  position:absolute;
+  left:6px;
+  top:6px;
+  width:170px;
+  background:#0e1111;
+  color:#fff;
+  padding:8px;
+  border-radius:6px;
+  font-size:12px;
+}
+.variant-item:hover .variant-tooltip { display:block }
+
+/* bottom caption */
+.panel-note{ color:#cfcfcf; font-size:13px; margin-top:10px }
+
+/* ---------- FORMATTING for large screens ---------- */
+@media (min-width:1100px){
+  .main{ padding:28px 36px; gap:28px }
+  .panel-left{ padding:18px; }
+  .variants-panel{ padding:18px; }
+}
+
+/* compact layout on small screens */
+@media (max-width:900px){
+  .main{ flex-direction:column; padding:12px }
+  .panel-left{ width:100%; order:1 }
+  .canvas{ order:2; min-width:0 }
+  .variants-panel{ width:100%; order:3 }
+}
