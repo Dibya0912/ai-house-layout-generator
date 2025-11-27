@@ -190,6 +190,39 @@ Integrated with current variants list
 ⭐ Outcome
 The app now behaves like a professional AI layout assistant — giving expert-level recommendations, issues, and best-pick suggestions.
 
+✅ Day 8 — Auto Furniture Placement (Auto-Layout Furnishing)
+
+✔ Completed
+
+What I added
+
+Auto furniture placement engine that places simple, scalable furniture inside rooms based on room geometry (no ML — deterministic rules).
+
+Furniture types (per room):
+
+Living: sofa, coffee table, TV unit
+
+Bedroom: bed, pillow, wardrobe (if space)
+
+Kitchen: counter + sink
+
+Bathroom: toilet + basin
+
+Furniture rendered as SVG elements inside the same plan (included in SVG/PNG exports).
+
+Show / Hide Furniture toggle in SvgCanvas for quick UI control.
+
+Safe fallback: furniture rendering is wrapped in try/catch so it never breaks the plan rendering.
+
+Files added / modified
+
+Added: src/utils/furnitureEngine.js — placement logic + SVG generator
+
+Modified: src/components/SvgCanvas.jsx — integrates furniture engine, adds toggle, keeps zoom & export features
+
+Modified: src/styles.css — furniture visual styles
+
+
 🛠️ Tech Stack
 Area	Technology
 Frontend	React + Vite
@@ -237,8 +270,7 @@ Repo:
 👉 https://github.com/Dibya0912/ai-house-layout-generator
 
 🔭 Planned Roadmap
-Day	Feature
-Day 8	Auto furniture placement (basic presets)
+
 Day 9	High-quality PDF export
 Bonus	Keyboard navigation, improved color themes, animated transitions
 ⭐ Final Thoughts
