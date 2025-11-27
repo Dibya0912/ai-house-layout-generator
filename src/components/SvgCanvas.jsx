@@ -1,5 +1,6 @@
 // src/components/SvgCanvas.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { placeFurniture, furnitureItemsToSvg } from '../utils/furnitureEngine';
 
 /**
  * SvgCanvas
@@ -11,6 +12,7 @@ import React, { useEffect, useRef } from 'react';
  */
 export default function SvgCanvas({ layout, spec, scale = 1, setScale = () => {} }) {
   const wrapperRef = useRef(null);
+  const [showFurniture, setShowFurniture] = useState(true);
 
   useEffect(() => {
     // scroll to top-left on layout change
@@ -21,22 +23,47 @@ export default function SvgCanvas({ layout, spec, scale = 1, setScale = () => {}
     // do not reset scale (we persist scale)
   }, [layout]);
 
+  // Build SVG (rooms + furniture when enabled)
   function layoutToSvg(layout) {
     if (!layout) return '';
     const { W, H, rooms } = layout;
     const ns = 'http://www.w3.org/2000/svg';
-    const svg = [`<svg id="plan" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="${ns}" preserveAspectRatio="xMidYMid meet" style="background:#fff; border:1px solid #ccc; display:block">`];
+    const svgParts = [];
+    svgParts.push(`<svg id="plan" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="${ns}" preserveAspectRatio="xMidYMid meet" style="background:#fff; border:1px solid #ccc; display:block">`);
+
+    // rooms
     rooms.forEach(r => {
       const x = Number.isFinite(r.x) ? r.x : 0;
       const y = Number.isFinite(r.y) ? r.y : 0;
       const w = Math.max(2, Number.isFinite(r.w) ? r.w : 20);
       const h = Math.max(2, Number.isFinite(r.h) ? r.h : 20);
       const label = (r.label || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      svg.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff" stroke="#222" stroke-width="2" />`);
-      svg.push(`<text x="${x+8}" y="${y+18}" font-size="12" fill="#111">${label}</text>`);
+      svgParts.push(`<g class="room">`);
+      svgParts.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff" stroke="#222" stroke-width="2" />`);
+      // label: if enough space show inline otherwise skip (legend handles small rooms)
+      const minSide = Math.min(w, h);
+      if (minSide > 70) {
+        svgParts.push(`<text x="${x+8}" y="${y+18}" font-size="12" fill="#111">${label}</text>`);
+      }
+      svgParts.push(`</g>`);
     });
-    svg.push('</svg>');
-    return svg.join('\n');
+
+    // furniture
+    if (showFurniture) {
+      try {
+        const items = placeFurniture(layout);
+        const fsvg = furnitureItemsToSvg(items);
+        svgParts.push(`<g class="furniture">`);
+        svgParts.push(fsvg);
+        svgParts.push(`</g>`);
+      } catch (e) {
+        // fail-safe: don't break rendering
+        console.error('furniture render error', e);
+      }
+    }
+
+    svgParts.push('</svg>');
+    return svgParts.join('\n');
   }
 
   // Download SVG
@@ -113,6 +140,13 @@ export default function SvgCanvas({ layout, spec, scale = 1, setScale = () => {}
         <div style={{marginLeft:20}}>
           <button onClick={downloadSvg}>Download SVG</button>
           <button onClick={downloadPng} style={{marginLeft:8}}>Download PNG</button>
+        </div>
+
+        {/* Furniture toggle */}
+        <div style={{marginLeft:12}}>
+          <button onClick={()=>setShowFurniture(s=>!s)} className="btn-outline">
+            {showFurniture ? 'Hide Furniture' : 'Show Furniture'}
+          </button>
         </div>
       </div>
 
