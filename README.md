@@ -223,6 +223,54 @@ Modified: src/components/SvgCanvas.jsx — integrates furniture engine, adds tog
 Modified: src/styles.css — furniture visual styles
 
 
+🏆 Day 9 — PDF Export (Vector + PNG Fallback)
+
+✔ Completed
+
+This is a major professional feature — perfect for architects, clients, and portfolio usage.
+
+🔥 What we built today
+
+Added Download PDF button inside SvgCanvas
+
+Vector-quality export using jsPDF + svg2pdf.js
+
+Rooms
+
+Text
+
+Furniture
+
+Strokes
+All preserved as vector paths (super clean at any zoom).
+
+If vector export fails → automatic PNG fallback
+
+Renders SVG → Canvas → PNG → embeds in PDF
+
+Ensures PDF download always works, even on Windows / Chrome quirks
+
+🧪 Additional features
+
+Auto inline computed styles for better PDF fidelity
+
+PDF page size automatically matches layout size
+
+Clean filename generation based on width × height
+
+📄 Updated Files
+
+SvgCanvas.jsx (major update)
+
+PDF export logic added
+
+Cleaned imports to avoid bundler errors
+
+⭐ Outcome
+
+Users can now export high-quality PDFs of their generated layouts — ideal for sharing, printing, or professional submissions.
+
+
 🛠️ Tech Stack
 Area	Technology
 Frontend	React + Vite
