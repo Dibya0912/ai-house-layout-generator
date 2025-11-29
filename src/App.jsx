@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import InputPanel from './components/InputPanel';
 import SvgCanvas from './components/SvgCanvas';
@@ -14,10 +13,21 @@ export default function App(){
   const [variants, setVariants] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [scale, setScale] = useState(1);
-  const [spec, setSpec] = useState({ width:12, height:8, beds:2, baths:1, orientation:'north' });
+
+  // default spec includes wallThickness and theme
+  const [spec, setSpec] = useState({
+    width:12, height:8, beds:2, baths:1, orientation:'north',
+    wallThickness: 2, theme: 'dark' // theme: 'dark' | 'light'
+  });
 
   // AI analysis state
   const [aiReport, setAiReport] = useState({ bestId: null, reports: [], summary: '' });
+
+  // apply theme class on body
+  useEffect(()=>{
+    document.body.classList.remove('theme-light','theme-dark');
+    document.body.classList.add(spec.theme === 'light' ? 'theme-light' : 'theme-dark');
+  }, [spec.theme]);
 
   // generate variants and refresh analysis
   const handleGenerate = useCallback((incomingSpec, variantCount=4) => {
@@ -42,7 +52,6 @@ export default function App(){
     setLayout(v.layout);
   }
 
-  // apply AI pick (sets selected variant)
   function handleAIPick() {
     if (!aiReport || !aiReport.bestId) {
       alert('AI did not return a recommendation');
@@ -56,7 +65,6 @@ export default function App(){
     }
   }
 
-  // apply a single variant by id (from AI panel)
   function applyVariantById(id) {
     const chosen = variants.find(v => v.id === id);
     if (chosen) {
@@ -80,7 +88,6 @@ export default function App(){
     if (obj.selectedId) setSelectedId(obj.selectedId);
     if (obj.layout) setLayout(obj.layout);
     if (obj.scale) setScale(obj.scale);
-    // re-run AI analysis after load
     const ai = analyzeVariants(obj.variants || [], obj.spec || {});
     setAiReport(ai);
     alert('Project loaded from localStorage');
@@ -117,7 +124,20 @@ export default function App(){
 
   return (
     <div className="app">
-      <header><h1>AI House Layout Generator</h1></header>
+      <header className="topbar">
+        <h1>AI House Layout Generator</h1>
+        <div className="topbar-controls">
+          <label className="switch">
+            <input
+              type="checkbox"
+              checked={spec.theme === 'light'}
+              onChange={e => setSpec(s => ({ ...s, theme: e.target.checked ? 'light' : 'dark' }))}
+            />
+            <span className="slider" />
+            <span className="switch-label">{spec.theme === 'light' ? 'Light' : 'Dark'}</span>
+          </label>
+        </div>
+      </header>
 
       <main className="main" style={{alignItems:'flex-start', gap:16}}>
         <div style={{display:'flex', flexDirection:'column', gap:12}}>
@@ -126,6 +146,7 @@ export default function App(){
             onGenerate={(s,count)=>handleGenerate(s,count)}
             onSave={saveProject}
             onLoad={loadProject}
+            setSpec={(s)=>setSpec(prev => ({...prev,...s}))}
           />
           <AISuggestionsPanel
             reports={aiReport.reports}
