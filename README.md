@@ -271,6 +271,18 @@ Cleaned imports to avoid bundler errors
 Users can now export high-quality PDFs of their generated layouts — ideal for sharing, printing, or professional submissions.
 
 
+
+✅ Day 10 — Final UI Polish, Theme & Wall Controls
+- Light / Dark theme toggle (topbar)
+- Wall thickness slider (1px–8px)
+- Room color presets (soft pastels per room type)
+- UI spacing, buttons, and polish improvements
+- Persisted theme & wallThickness in save/load
+Outcome: App feels polished and production-ready — ready for portfolio screenshots.
+
+
+
+
 🛠️ Tech Stack
 Area	Technology
 Frontend	React + Vite
