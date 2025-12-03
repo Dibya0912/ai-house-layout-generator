@@ -9,6 +9,7 @@
 An AI-powered 2D house layout generator that creates smart, structured, optimized floor plans with multiple variants, scoring, zooming, and export features.
 Built using React + Vite and rendered using clean SVG.
 
+
 ✅ Day 1 — Project Setup + First Working Layout
 ✔ Completed
 
