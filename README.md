@@ -283,6 +283,27 @@ Outcome: App feels polished and production-ready — ready for portfolio screens
 
 
 
+✅ Day 11 — Interactive Room Editing (Move + Rename)
+
+✔ Completed
+
+Feature	Description
+Room Selection	Click any room inside the SVG → it becomes highlighted
+Move Room	Arrow-style controls allow nudging room position (pixel precise placement)
+Rename Room	Change room label dynamically using rename prompt
+Visual Feedback	Selected room is highlighted with bold pink stroke
+Non-destructive Updates	All changes stored in internal layout state for future saving
+
+🧠 Debug Helpers
+Live layout changes can be inspected using:
+
+window.__currentLayout
+
+
+⭐ Outcome
+The floor plan is now editable like a real drawing tool — users interact with individual rooms, reposition them, and rename them instantly.
+Huge UX improvement toward an interactive planning experience.
+
 
 🛠️ Tech Stack
 Area	Technology
