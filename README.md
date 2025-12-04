@@ -305,6 +305,8 @@ The floor plan is now editable like a real drawing tool — users interact with 
 Huge UX improvement toward an interactive planning experience.
 
 
+
+
 🛠️ Tech Stack
 Area	Technology
 Frontend	React + Vite
