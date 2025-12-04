@@ -305,6 +305,40 @@ The floor plan is now editable like a real drawing tool — users interact with 
 Huge UX improvement toward an interactive planning experience.
 
 
+🌟 Project Progress Timeline (Day 1 → Day 12)
+🛠️ Day 12 — Interactive Room Editing + Resize Controls
+
+✔ Completed
+
+Feature	Status	Notes
+Select individual room inside SVG	✅	Click to highlight a room
+Move room using arrows (Up/Down/Left/Right)	✅	Snaps to a small grid for alignment
+Rename any room	✅	Inline rename panel
+Resize rooms (Wider/Narrower / Taller/Shorter)	🚀	Live resizing with boundary protection
+Auto-clamp inside house walls	✔	Prevents visual break layout
+Strong visual highlight for selected room	✔	Enhanced UX
+
+🔍 Update summary
+
+Editing is now meaningful — UI updates instantly
+
+Rooms remain inside boundaries after each transform
+
+UX panel appears only when a room is selected
+
+This feature is a major leap toward custom architecture tools
+
+📌 Files updated:
+
+src/App.jsx
+src/components/SvgCanvas.jsx
+src/styles.css
+
+
+⭐ Outcome
+Users can now pick any room, move it, resize it, and rename it directly on the SVG —
+a real architectural editor experience 🎯
+
 
 
 🛠️ Tech Stack
