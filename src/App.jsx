@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import InputPanel from './components/InputPanel';
 import SvgCanvas from './components/SvgCanvas';
@@ -14,22 +15,19 @@ export default function App(){
   const [selectedId, setSelectedId] = useState(null);
   const [scale, setScale] = useState(1);
 
-  // default spec includes wallThickness and theme
   const [spec, setSpec] = useState({
     width:12, height:8, beds:2, baths:1, orientation:'north',
-    wallThickness: 2, theme: 'dark' // theme: 'dark' | 'light'
+    wallThickness: 2, theme: 'dark'
   });
 
-  // AI analysis state
   const [aiReport, setAiReport] = useState({ bestId: null, reports: [], summary: '' });
 
-  // apply theme class on body
+  // theme handling
   useEffect(()=>{
     document.body.classList.remove('theme-light','theme-dark');
     document.body.classList.add(spec.theme === 'light' ? 'theme-light' : 'theme-dark');
   }, [spec.theme]);
 
-  // generate variants and refresh analysis
   const handleGenerate = useCallback((incomingSpec, variantCount=4) => {
     const useSpec = { ...spec, ...incomingSpec };
     setSpec(useSpec);
@@ -41,8 +39,6 @@ export default function App(){
     } else {
       setLayout(null);
     }
-
-    // analyze right away
     const ai = analyzeVariants(vs, useSpec);
     setAiReport(ai);
   }, [spec]);
@@ -73,13 +69,13 @@ export default function App(){
     }
   }
 
-  // save/load helpers (persist project)
   function saveProject() {
     const payload = { spec, variants, selectedId, layout, scale, timestamp: new Date().toISOString() };
     const ok = saveProjectToStorage(payload);
     if (ok) alert('Project saved to localStorage');
     else alert('Failed to save project (check console)');
   }
+
   function loadProject() {
     const obj = loadProjectFromStorage();
     if (!obj) { alert('No saved project'); return; }
@@ -93,7 +89,6 @@ export default function App(){
     alert('Project loaded from localStorage');
   }
 
-  // auto-load on mount if available
   useEffect(()=>{
     const obj = loadProjectFromStorage();
     if (obj) {
@@ -108,7 +103,6 @@ export default function App(){
     }
   }, []);
 
-  // expose debug helpers
   useEffect(()=>{
     window.__aihl_handleGenerate = handleGenerate;
     window.__aihl_saveProject = saveProject;
@@ -158,9 +152,22 @@ export default function App(){
         </div>
 
         <div style={{flex:1, display:'flex', flexDirection:'column', gap:12}}>
-          <SvgCanvas layout={layout} spec={spec} scale={scale} setScale={setScale} />
+          <SvgCanvas
+            layout={layout}
+            setLayout={setLayout}
+            spec={spec}
+            scale={scale}
+            setScale={setScale}
+          />
           <div style={{display:'flex', gap:8, alignItems:'center'}}>
-            <button onClick={() => { if (!variants.length) alert('Generate variants first'); else { const ai = analyzeVariants(variants, spec); setAiReport(ai); alert('AI re-analyzed variants (check panel)'); } }}>Re-run AI Analysis</button>
+            <button onClick={() => {
+              if (!variants.length) alert('Generate variants first');
+              else {
+                const ai = analyzeVariants(variants, spec);
+                setAiReport(ai);
+                alert('AI re-analyzed variants (check panel)');
+              }
+            }}>Re-run AI Analysis</button>
             <button onClick={handleAIPick}>AI Pick Best</button>
             <button onClick={saveProject}>Save Project</button>
             <button onClick={loadProject}>Load Project</button>
