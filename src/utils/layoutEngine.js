@@ -1,5 +1,6 @@
 // src/utils/layoutEngine.js
-// Day-5: layout generator + variants + scoring + font-size helper
+// Layout generator + variants + scoring + openings (doors/windows)
+
 const pxPerMeter = 50;
 
 // base deterministic layout (single source of truth)
@@ -35,7 +36,7 @@ export function baseLayout(spec = {}) {
 }
 
 // small random perturbation to create variants
-function jitterLayout(layout, seed = 0) {
+function jitterLayout(layout) {
   const { W, H, rooms } = layout;
   const newRooms = rooms.map(r => {
     const maxShiftX = Math.max(1, Math.round(W * 0.03));
@@ -122,7 +123,7 @@ export function generateVariants(spec = {}, n = 4) {
   const base = baseLayout(spec);
   const variants = [];
   for (let i = 0; i < n; i++) {
-    const v = jitterLayout(base, i + 1);
+    const v = jitterLayout(base);
     const s = scoreLayout(v, spec);
     variants.push({ layout: v, score: s, id: `v${i + 1}` });
   }
@@ -142,4 +143,86 @@ export function getFontSizeForRoom(r) {
   if (minSide > 100) return 12;
   if (minSide > 70) return 10;
   return 0; // too small -> legend
+}
+
+/**
+ * Day-13: Doors & Windows generator
+ * Returns: { doors: [{x,y,w,h,room,wall}], windows: [...] }
+ */
+export function generateOpenings(layout, spec = {}) {
+  if (!layout || !layout.rooms) return { doors: [], windows: [] };
+
+  const { W, H, rooms } = layout;
+  const ori = (spec && spec.orientation) || 'north';
+  const doors = [];
+  const windows = [];
+
+  const findRoom = (prefix) =>
+    rooms.find(r => r.label && r.label.toLowerCase().startsWith(prefix));
+
+  function addOpening(kind, room, wall, fraction = 0.5, size = 40) {
+    if (!room) return;
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const pad = 2;
+    let x, y, w, h;
+
+    if (wall === 'N' || wall === 'S') {
+      const maxW = Math.max(12, room.w * 0.35);
+      w = Math.min(size, maxW);
+      h = 6;
+      const cx = room.x + room.w * fraction;
+      x = clamp(cx - w / 2, room.x + pad, room.x + room.w - pad - w);
+      y = wall === 'N' ? room.y - h / 2 : room.y + room.h - h / 2;
+    } else {
+      const maxH = Math.max(12, room.h * 0.35);
+      h = Math.min(size, maxH);
+      w = 6;
+      const cy = room.y + room.h * fraction;
+      y = clamp(cy - h / 2, room.y + pad, room.y + room.h - pad - h);
+      x = wall === 'W' ? room.x - w / 2 : room.x + room.w - w / 2;
+    }
+
+    const arr = kind === 'door' ? doors : windows;
+    arr.push({ kind, room: room.label, wall, x, y, w, h });
+  }
+
+  // Main door on Living, based on orientation
+  const living = findRoom('living');
+  if (living) {
+    let wall = 'S';
+    if (ori === 'north') wall = 'S';
+    else if (ori === 'south') wall = 'N';
+    else if (ori === 'east') wall = 'W';
+    else if (ori === 'west') wall = 'E';
+    addOpening('door', living, wall, 0.25, 48);
+  }
+
+  // Windows on outer walls of each room
+  function chooseWallForWindow(r) {
+    if (r.y <= 0) return 'N';
+    if (r.x + r.w >= W) return 'E';
+    if (r.y + r.h >= H) return 'S';
+    if (r.x <= 0) return 'W';
+    return 'N';
+  }
+
+  rooms.forEach(r => {
+    const area = (r.w || 0) * (r.h || 0);
+    if (area < 1200) return; // tiny room, skip
+
+    const wall = chooseWallForWindow(r);
+    addOpening('window', r, wall, 0.5, 30);
+
+    // big room = second window on opposite wall
+    if (Math.min(r.w, r.h) > 140) {
+      let secondWall = wall;
+      if (wall === 'N') secondWall = 'S';
+      else if (wall === 'S') secondWall = 'N';
+      else if (wall === 'E') secondWall = 'W';
+      else if (wall === 'W') secondWall = 'E';
+      addOpening('window', r, secondWall, 0.7, 30);
+    }
+  });
+
+  return { doors, windows };
 }
