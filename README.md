@@ -340,6 +340,40 @@ Users can now pick any room, move it, resize it, and rename it directly on the S
 a real architectural editor experience 🎯
 
 
+✅ Day 13 — Auto Doors & Windows + Toggles + Legend
+
+✔ Completed
+
+Feature	Description
+Automatic Door Placement	Main entrance based on orientation (North/East/South/West)
+Automatic Window Placement	Smart positioning on outer walls, scaled by room size
+Toggle Visibility	Show/Hide Doors, Show/Hide Windows (separate controls)
+Interactive Editing	Still supports move / resize / rename rooms
+Color-coded Legend	Door = Brown, Window = Blue
+
+📌 Files Updated
+
+src/components/SvgCanvas.jsx
+
+src/utils/layoutEngine.js
+
+src/styles.css (legend styling + utility colors)
+
+🧠 Logic Highlights
+
+Doors respect selected house orientation
+
+Windows appear only on exterior walls
+
+Large rooms receive multiple windows for realism
+
+No overlap issues — openings stay on wall boundaries
+
+Works together with furniture + room editor
+
+🎯 Outcome
+Users now see practical architectural elements — the plan looks like a real house blueprint, not just rectangles.
+
 
 
 
