@@ -35,7 +35,6 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     if (!updated.rooms) return;
     mutateFn(updated.rooms, updated);
 
-    // clamp inside bounds
     const { W, H } = updated;
     updated.rooms.forEach(r => {
       if (r.x < 0) r.x = 0;
@@ -132,8 +131,10 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     // DOORS & WINDOWS
     let doors = [];
     let windows = [];
+    let openings = { doors: [], windows: [] };
+
     try {
-      const openings = generateOpenings(layout, spec);
+      openings = generateOpenings(layout, spec) || { doors: [], windows: [] };
       doors = openings.doors || [];
       windows = openings.windows || [];
     } catch (e) {
@@ -162,10 +163,10 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       svgParts.push(`</g>`);
     }
 
-    // FURNITURE
+    // FURNITURE (now door/window-aware)
     if (showFurniture) {
       try {
-        const items = placeFurniture(layout);
+        const items = placeFurniture(layout, openings, spec);
         svgParts.push(`<g class="furniture">${furnitureItemsToSvg(items)}</g>`);
       } catch (e) {
         console.error('furniture render error', e);
@@ -250,3 +251,4 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     </div>
   );
 }
+
