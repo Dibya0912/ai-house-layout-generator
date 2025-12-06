@@ -375,6 +375,44 @@ Works together with furniture + room editor
 Users now see practical architectural elements — the plan looks like a real house blueprint, not just rectangles.
 
 
+✅ Day 14 — Smart, Door-Aware Furniture Placement (Polished Layout Logic)
+✔ Completed
+
+- Upgraded `furnitureEngine` to use **doors + windows info** from `generateOpenings()`
+- Furniture is now placed **more realistically**, instead of random blocks:
+  - **Bedroom**
+    - Bed headboard prefers solid walls (avoids door/window walls where possible)
+    - Wardrobe tries to go on the opposite wall of the bed or a free wall
+  - **Living Room**
+    - Sofa is placed opposite the entry wall (from door), with a clear facing direction
+    - Coffee table auto-aligns in front of the sofa (based on sofa facing)
+    - TV unit tries to align opposite the sofa, centered on its wall
+  - **Kitchen**
+    - Counter runs along a window wall when available (more natural light)
+    - Sink tries to sit under / near the window for a realistic layout
+  - **Bathroom**
+    - Toilet and basin placed in stable corners, keeping clear walking area
+
+- Added small internal helpers:
+  - `groupByRoom()` → groups door/window openings by room
+  - `oppositeWall()` → helps align sofa vs TV vs entry
+  - Used door/window walls to build a **blockedWalls** set → avoids placing big furniture on those walls
+
+- Furniture SVG now has:
+  - Better colors and subtle strokes (bed, sofa, wardrobe, TV, counter, sink, toilet, basin)
+  - Sofa includes a **direction arrow** showing which way it faces
+
+- Updated `SvgCanvas.jsx`:
+  - Now calls `placeFurniture(layout, openings, spec)` instead of plain `placeFurniture(layout)`
+  - Openings (doors & windows) are shared with the furniture engine, so furniture respects them
+
+⭐ Outcome
+
+Furniture layout now feels **intentional and realistic**, not random:
+beds don’t block doors, sofas face into the room, TVs are on the correct wall,
+kitchen sinks sit under windows — the whole floor plan looks like a real architect quickly drafted it.
+
+
 
 
 
