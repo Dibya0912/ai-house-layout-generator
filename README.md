@@ -415,6 +415,31 @@ kitchen sinks sit under windows — the whole floor plan looks like a real archi
 
 
 
+🚀 Day 15 — Measurement Tool + Visual Distance Indicators
+
+Objective:
+Give users geometric understanding — measure distances between any points on the floor plan.
+
+✨ New Features Added
+Feature	Description
+📏 Measurement Tool	Users can click two points on the layout to measure distance
+🔵 Point Markers	Each selected point is visually marked
+📐 Dynamic Distance Line	A line appears between points with a live distance label
+🧮 Real-World Unit Conversion	Uses px→meters conversion for accurate measurement
+❌ Reset Logic	Auto clears markers after measurement completes
+🛠️ Implementation Notes
+
+UI integrated inside SvgCanvas.jsx
+
+Uses layoutEngine.pxPerMeter to convert pixels → meters
+
+Supports zoom without losing accuracy
+
+Future UI panel planned: Measurement history + unit toggle (ft/m)
+
+
+
+
 
 
 
