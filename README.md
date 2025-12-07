@@ -416,6 +416,9 @@ kitchen sinks sit under windows — the whole floor plan looks like a real archi
 
 
 
+
+
+
 🛠️ Tech Stack
 Area	Technology
 Frontend	React + Vite
