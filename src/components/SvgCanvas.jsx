@@ -10,11 +10,20 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
   const [showWindows, setShowWindows] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
+  // Day-15: measurement state
+  const [measuring, setMeasuring] = useState(false);
+  const [measurePoints, setMeasurePoints] = useState([]); // [{x,y}, {x,y}]
+  const [measureDistance, setMeasureDistance] = useState(null); // in meters
+
   useEffect(() => {
     if (wrapperRef.current) {
       wrapperRef.current.scrollLeft = 0;
       wrapperRef.current.scrollTop = 0;
     }
+    // reset measurement on layout change
+    setMeasuring(false);
+    setMeasurePoints([]);
+    setMeasureDistance(null);
   }, [layout]);
 
   const wallThickness = Number(spec.wallThickness ?? 2);
@@ -92,9 +101,61 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     setSelectedRoom(trimmed);
   }
 
+  // Day-15: handle click inside SVG for measurement
+  function handleSvgClick(evt) {
+    if (!measuring || !layout) return;
+    const svg = document.getElementById('plan');
+    if (!svg) return;
+
+    const rect = svg.getBoundingClientRect();
+    const x = ((evt.clientX - rect.left) / rect.width) * layout.W;
+    const y = ((evt.clientY - rect.top) / rect.height) * layout.H;
+
+    setMeasurePoints(prev => {
+      // first point
+      if (prev.length === 0) {
+        setMeasureDistance(null);
+        return [{ x, y }];
+      }
+
+      // second point -> compute distance
+      if (prev.length === 1) {
+        const p0 = prev[0];
+        const p1 = { x, y };
+        const dx = p1.x - p0.x;
+        const dy = p1.y - p0.y;
+        const distPx = Math.hypot(dx, dy);
+
+        // px -> meter conversion
+        let metersPerPx;
+        if (spec && spec.width && layout.W) {
+          metersPerPx = spec.width / layout.W;
+        } else if (spec && spec.height && layout.H) {
+          metersPerPx = spec.height / layout.H;
+        } else {
+          // fallback: assume 50 px = 1m
+          metersPerPx = 1 / 50;
+        }
+        const distM = distPx * metersPerPx;
+        setMeasureDistance(distM);
+
+        return [p0, p1];
+      }
+
+      // already have 2 points -> start a new measurement
+      setMeasureDistance(null);
+      return [{ x, y }];
+    });
+  }
+
+  // expose room selection and svg click for inline handlers
   useEffect(() => {
     window.__selectRoom = selectRoom;
-    return () => { delete window.__selectRoom; };
+    window.__measureClick = handleSvgClick;
+    return () => {
+      delete window.__selectRoom;
+      delete window.__measureClick;
+    };
   });
 
   function layoutToSvg(layout) {
@@ -105,7 +166,8 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     svgParts.push(`
       <svg id="plan" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
         xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"
-        style="background:#fff; border:1px solid #ccc;">
+        style="background:#fff; border:1px solid #ccc;"
+        onclick="window.__measureClick && window.__measureClick(evt)">
     `);
 
     // ROOMS
@@ -113,7 +175,7 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       const sel = selectedRoom === r.label;
       const fill = roomFill(r.label);
       svgParts.push(`
-        <g class="room" onclick="window.__selectRoom('${(r.label || '').replace(/'/g, "\\'")}')">
+        <g class="room" onclick="window.__selectRoom && window.__selectRoom('${(r.label || '').replace(/'/g, "\\'")}')">
           <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"
             fill="${fill}"
             stroke="${sel ? '#ff3366' : '#222'}"
@@ -163,7 +225,7 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       svgParts.push(`</g>`);
     }
 
-    // FURNITURE (now door/window-aware)
+    // FURNITURE (door/window-aware)
     if (showFurniture) {
       try {
         const items = placeFurniture(layout, openings, spec);
@@ -171,6 +233,19 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       } catch (e) {
         console.error('furniture render error', e);
       }
+    }
+
+    // Day-15: measurement overlay (line + circles)
+    if (measurePoints && measurePoints.length === 2) {
+      const [p0, p1] = measurePoints;
+      svgParts.push(`
+        <g class="measure">
+          <line x1="${p0.x}" y1="${p0.y}" x2="${p1.x}" y2="${p1.y}"
+            stroke="#ef4444" stroke-width="2" stroke-dasharray="4 3" />
+          <circle cx="${p0.x}" cy="${p0.y}" r="3.5" fill="#ef4444" />
+          <circle cx="${p1.x}" cy="${p1.y}" r="3.5" fill="#ef4444" />
+        </g>
+      `);
     }
 
     svgParts.push(`</svg>`);
@@ -193,6 +268,35 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
         <button onClick={() => setScale(s => Math.max(0.2, +(s - 0.1).toFixed(2)))}>Zoom -</button>
         <button onClick={() => setScale(1)}>Reset</button>
         <div className="zoom-info" style={{marginLeft:12}}>Scale: {Math.round(scale * 100)}%</div>
+
+        {/* Measure toggle + clear */}
+        <button
+          onClick={() => {
+            setMeasuring(m => {
+              const next = !m;
+              if (!next) {
+                setMeasurePoints([]);
+                setMeasureDistance(null);
+              }
+              return next;
+            });
+          }}
+          className="btn-outline"
+          style={{ marginLeft: 12 }}
+        >
+          📏 {measuring ? 'Measuring…' : 'Measure'}
+        </button>
+        {measurePoints.length > 0 && (
+          <button
+            onClick={() => {
+              setMeasurePoints([]);
+              setMeasureDistance(null);
+            }}
+            className="btn-outline"
+          >
+            Clear
+          </button>
+        )}
 
         <button onClick={() => setShowFurniture(s=>!s)} className="btn-outline" style={{marginLeft:12}}>
           {showFurniture ? 'Hide Furniture' : 'Show Furniture'}
@@ -240,6 +344,12 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
         </div>
       </div>
 
+      {measureDistance && (
+        <div className="measure-info">
+          Distance: {measureDistance.toFixed(2)} m
+        </div>
+      )}
+
       <div className="door-window-legend">
         <div className="legend-chip">
           <span className="legend-swatch legend-door" /> <span>Main Door / Doors</span>
@@ -251,4 +361,3 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     </div>
   );
 }
-
