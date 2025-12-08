@@ -437,6 +437,36 @@ Supports zoom without losing accuracy
 
 Future UI panel planned: Measurement history + unit toggle (ft/m)
 
+📌 Day 16 — Auto Area Display (m²) + Improved Measurement UX
+
+✔ Completed
+
+Feature	Description
+Automatic Area Labels	Each room now shows floor area in square meters inside the plan
+Smart Visibility Rules	Area label only shows when room size is large enough (no clutter!)
+Measurement Reset Logic	Switching variants resets measurement points cleanly
+UX Enhancements	Clear button + easy toggle UX for measurement
+Scales perfectly	Correct px → meter conversion applied
+🔍 How It Works
+
+Uses r.w × r.h and our global pxPerMeter = 50
+
+Area text appears below room name
+
+Automatically recalculated after:
+
+Moving a room
+
+Resizing a room
+
+Switching variants
+
+Loading a saved project
+
+🖼️ UI Output Example
+Living
+14.3 m²
+
 
 
 
