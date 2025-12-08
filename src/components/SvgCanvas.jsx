@@ -12,15 +12,14 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
 
   // Day-15: measurement state
   const [measuring, setMeasuring] = useState(false);
-  const [measurePoints, setMeasurePoints] = useState([]); // [{x,y}, {x,y}]
-  const [measureDistance, setMeasureDistance] = useState(null); // in meters
+  const [measurePoints, setMeasurePoints] = useState([]); 
+  const [measureDistance, setMeasureDistance] = useState(null);
 
   useEffect(() => {
     if (wrapperRef.current) {
       wrapperRef.current.scrollLeft = 0;
       wrapperRef.current.scrollTop = 0;
     }
-    // reset measurement on layout change
     setMeasuring(false);
     setMeasurePoints([]);
     setMeasureDistance(null);
@@ -54,12 +53,10 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
 
     setLayout(updated);
     window.__currentLayout = updated;
-    console.log('Updated layout:', updated);
   }
 
   function selectRoom(label) {
     setSelectedRoom(label);
-    console.log('Selected room:', label);
   }
 
   function moveRoom(dx, dy) {
@@ -79,12 +76,8 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       const room = rooms.find(r => r.label === selectedRoom);
       if (!room) return;
       const minSize = 40;
-      let newW = room.w + dw;
-      let newH = room.h + dh;
-      if (newW < minSize) newW = minSize;
-      if (newH < minSize) newH = minSize;
-      room.w = newW;
-      room.h = newH;
+      room.w = Math.max(minSize, room.w + dw);
+      room.h = Math.max(minSize, room.h + dh);
     });
   }
 
@@ -101,7 +94,6 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     setSelectedRoom(trimmed);
   }
 
-  // Day-15: handle click inside SVG for measurement
   function handleSvgClick(evt) {
     if (!measuring || !layout) return;
     const svg = document.getElementById('plan');
@@ -112,43 +104,29 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     const y = ((evt.clientY - rect.top) / rect.height) * layout.H;
 
     setMeasurePoints(prev => {
-      // first point
       if (prev.length === 0) {
         setMeasureDistance(null);
         return [{ x, y }];
       }
 
-      // second point -> compute distance
       if (prev.length === 1) {
         const p0 = prev[0];
-        const p1 = { x, y };
-        const dx = p1.x - p0.x;
-        const dy = p1.y - p0.y;
+        const dx = x - p0.x;
+        const dy = y - p0.y;
         const distPx = Math.hypot(dx, dy);
 
-        // px -> meter conversion
-        let metersPerPx;
-        if (spec && spec.width && layout.W) {
-          metersPerPx = spec.width / layout.W;
-        } else if (spec && spec.height && layout.H) {
-          metersPerPx = spec.height / layout.H;
-        } else {
-          // fallback: assume 50 px = 1m
-          metersPerPx = 1 / 50;
-        }
-        const distM = distPx * metersPerPx;
+        const pxPerMeter = 50;
+        const distM = distPx / pxPerMeter;
         setMeasureDistance(distM);
 
-        return [p0, p1];
+        return [p0, { x, y }];
       }
 
-      // already have 2 points -> start a new measurement
       setMeasureDistance(null);
       return [{ x, y }];
     });
   }
 
-  // expose room selection and svg click for inline handlers
   useEffect(() => {
     window.__selectRoom = selectRoom;
     window.__measureClick = handleSvgClick;
@@ -170,10 +148,13 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
         onclick="window.__measureClick && window.__measureClick(evt)">
     `);
 
-    // ROOMS
     rooms.forEach(r => {
       const sel = selectedRoom === r.label;
       const fill = roomFill(r.label);
+
+      const areaSqM = ((r.w * r.h) / (50 * 50));
+      const showArea = Math.min(r.w, r.h) > 80;
+
       svgParts.push(`
         <g class="room" onclick="window.__selectRoom && window.__selectRoom('${(r.label || '').replace(/'/g, "\\'")}')">
           <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"
@@ -181,62 +162,54 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
             stroke="${sel ? '#ff3366' : '#222'}"
             stroke-width="${sel ? wallThickness + 2 : wallThickness}"
           />
+
           ${
             Math.min(r.w, r.h) > 70
-              ? `<text x="${r.x + 8}" y="${r.y + 18}" font-size="12" fill="#111">${r.label}</text>`
+              ? `<text x="${r.x + 8}" y="${r.y + 18}" font-size="12" fill="#111" font-weight="600">${r.label}</text>`
+              : ''
+          }
+
+          ${
+            showArea
+              ? `<text x="${r.x + 8}" y="${r.y + 34}" font-size="11" fill="#444">${areaSqM.toFixed(1)} m²</text>`
               : ''
           }
         </g>
       `);
     });
 
-    // DOORS & WINDOWS
-    let doors = [];
-    let windows = [];
     let openings = { doors: [], windows: [] };
 
     try {
-      openings = generateOpenings(layout, spec) || { doors: [], windows: [] };
-      doors = openings.doors || [];
-      windows = openings.windows || [];
-    } catch (e) {
-      console.warn('generateOpenings error:', e);
-    }
+      openings = generateOpenings(layout, spec);
+    } catch {}
 
-    if (showDoors && doors.length) {
+    if (showDoors && openings.doors.length) {
       svgParts.push(`<g class="doors">`);
-      doors.forEach(d => {
-        svgParts.push(`
-          <rect x="${d.x}" y="${d.y}" width="${d.w}" height="${d.h}"
-            fill="#d97757" stroke="#7c2d12" stroke-width="1.5" />
-        `);
+      openings.doors.forEach(d => {
+        svgParts.push(`<rect x="${d.x}" y="${d.y}" width="${d.w}" height="${d.h}"
+          fill="#d97757" stroke="#7c2d12" stroke-width="1.5" />`);
       });
       svgParts.push(`</g>`);
     }
 
-    if (showWindows && windows.length) {
+    if (showWindows && openings.windows.length) {
       svgParts.push(`<g class="windows">`);
-      windows.forEach(w => {
-        svgParts.push(`
-          <rect x="${w.x}" y="${w.y}" width="${w.w}" height="${w.h}"
-            fill="#bfdbfe" stroke="#1d4ed8" stroke-width="1.2" fill-opacity="0.9" />
-        `);
+      openings.windows.forEach(w => {
+        svgParts.push(`<rect x="${w.x}" y="${w.y}" width="${w.w}" height="${w.h}"
+          fill="#bfdbfe" stroke="#1d4ed8" stroke-width="1.2" fill-opacity="0.9" />`);
       });
       svgParts.push(`</g>`);
     }
 
-    // FURNITURE (door/window-aware)
     if (showFurniture) {
       try {
         const items = placeFurniture(layout, openings, spec);
         svgParts.push(`<g class="furniture">${furnitureItemsToSvg(items)}</g>`);
-      } catch (e) {
-        console.error('furniture render error', e);
-      }
+      } catch {}
     }
 
-    // Day-15: measurement overlay (line + circles)
-    if (measurePoints && measurePoints.length === 2) {
+    if (measurePoints.length === 2) {
       const [p0, p1] = measurePoints;
       svgParts.push(`
         <g class="measure">
@@ -264,41 +237,27 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
   return (
     <div className="canvas">
       <div className="controls-row">
-        <button onClick={() => setScale(s => Math.min(2, +(s + 0.1).toFixed(2)))}>Zoom +</button>
-        <button onClick={() => setScale(s => Math.max(0.2, +(s - 0.1).toFixed(2)))}>Zoom -</button>
+        <button onClick={() => setScale(s => Math.min(2, s + 0.1))}>Zoom +</button>
+        <button onClick={() => setScale(s => Math.max(0.2, s - 0.1))}>Zoom -</button>
         <button onClick={() => setScale(1)}>Reset</button>
-        <div className="zoom-info" style={{marginLeft:12}}>Scale: {Math.round(scale * 100)}%</div>
+        <div style={{marginLeft:12}}>Scale: {Math.round(scale * 100)}%</div>
 
-        {/* Measure toggle + clear */}
-        <button
-          onClick={() => {
-            setMeasuring(m => {
-              const next = !m;
-              if (!next) {
-                setMeasurePoints([]);
-                setMeasureDistance(null);
-              }
-              return next;
-            });
-          }}
-          className="btn-outline"
-          style={{ marginLeft: 12 }}
-        >
-          📏 {measuring ? 'Measuring…' : 'Measure'}
+        <button onClick={() => {
+          setMeasuring(m => !m);
+          setMeasurePoints([]);
+          setMeasureDistance(null);
+        }} className="btn-outline" style={{marginLeft:12}}>
+          📏 {measuring ? "Measuring…" : "Measure"}
         </button>
-        {measurePoints.length > 0 && (
-          <button
-            onClick={() => {
-              setMeasurePoints([]);
-              setMeasureDistance(null);
-            }}
-            className="btn-outline"
-          >
-            Clear
-          </button>
-        )}
 
-        <button onClick={() => setShowFurniture(s=>!s)} className="btn-outline" style={{marginLeft:12}}>
+        <button onClick={() => {
+          setMeasurePoints([]);
+          setMeasureDistance(null);
+        }} className="btn-outline">
+          Clear
+        </button>
+
+        <button onClick={() => setShowFurniture(s=>!s)} className="btn-outline">
           {showFurniture ? 'Hide Furniture' : 'Show Furniture'}
         </button>
         <button onClick={() => setShowDoors(s=>!s)} className="btn-outline">
@@ -312,28 +271,20 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       {selectedRoom && (
         <div className="room-editor">
           <strong>{selectedRoom}</strong>
-
-          <div className="edit-buttons">
-            <button onClick={() => moveRoom(0,-10)}>⬆</button>
-            <button onClick={() => moveRoom(0,10)}>⬇</button>
-            <button onClick={() => moveRoom(-10,0)}>⬅</button>
-            <button onClick={() => moveRoom(10,0)}>➡</button>
-          </div>
-
-          <div className="resize-buttons">
-            <span style={{fontSize:12, marginRight:6}}>Resize:</span>
-            <button onClick={() => resizeRoom(10,0)}>Wider</button>
-            <button onClick={() => resizeRoom(-10,0)}>Narrower</button>
-            <button onClick={() => resizeRoom(0,10)}>Taller</button>
-            <button onClick={() => resizeRoom(0,-10)}>Shorter</button>
-          </div>
-
-          <button style={{marginTop:8}} onClick={renameRoom}>Rename Room</button>
+          <button onClick={() => moveRoom(0,-10)}>⬆</button>
+          <button onClick={() => moveRoom(0,10)}>⬇</button>
+          <button onClick={() => moveRoom(-10,0)}>⬅</button>
+          <button onClick={() => moveRoom(10,0)}>➡</button>
+          <button onClick={() => resizeRoom(10,0)}>Wider</button>
+          <button onClick={() => resizeRoom(-10,0)}>Narrower</button>
+          <button onClick={() => resizeRoom(0,10)}>Taller</button>
+          <button onClick={() => resizeRoom(0,-10)}>Shorter</button>
+          <button onClick={renameRoom}>Rename</button>
         </div>
       )}
 
       <div ref={wrapperRef} style={containerStyle}>
-        <div style={{transform:`scale(${scale})`, transformOrigin:'top left', display:'inline-block'}}>
+        <div style={{transform:`scale(${scale})`, transformOrigin:'top left'}}>
           <div
             dangerouslySetInnerHTML={{
               __html: layout
@@ -349,15 +300,6 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
           Distance: {measureDistance.toFixed(2)} m
         </div>
       )}
-
-      <div className="door-window-legend">
-        <div className="legend-chip">
-          <span className="legend-swatch legend-door" /> <span>Main Door / Doors</span>
-        </div>
-        <div className="legend-chip">
-          <span className="legend-swatch legend-window" /> <span>Windows</span>
-        </div>
-      </div>
     </div>
   );
 }
