@@ -467,6 +467,45 @@ Loading a saved project
 Living
 14.3 m²
 
+✅ Day 17 — Smart Construction Grid (UX Upgrade)
+
+Today’s focus: Real architectural accuracy.
+
+🔥 What’s new?
+
+🧱 Grid Background Rendering inside SVG canvas
+
+🎯 Enhanced Grid Snapping
+
+Room movement snaps to 5px = 0.1m increments
+
+Room resizing also respects construction grid
+
+📐 Developer-ready improvements for dimension alignment
+
+🎯 Why this matters?
+Before	After
+Rooms move freely → messy alignment	Architects-style perfect alignment
+Hard to reproduce precise sizes	Repeatable, measurable accurate shapes
+Visually floating rooms	Grounded on logical grid foundation
+
+This update pushes the tool toward REAL construction planning — not just a toy layout generator.
+
+💡 Tech Changes
+
+Updated SvgCanvas.jsx
+
+Grid drawn before rooms using <pattern> SVG
+
+Movement / resize remains quantized to 5px grid
+
+🧪 How to Use
+Action	Result
+Move room by ⬅⬆➡⬇ buttons	Room snaps to nearest construction grid
+Resize through controls	Dimensions remain aligned
+Zoom controls	Grid scales perfectly with view
+
+
 
 
 
