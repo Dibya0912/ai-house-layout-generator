@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { placeFurniture, furnitureItemsToSvg } from '../utils/furnitureEngine';
 import { generateOpenings } from '../utils/layoutEngine';
 
+const GRID_SIZE = 20; // px – used for both grid lines and snapping
+
 export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, setScale = () => {} }) {
   const wrapperRef = useRef(null);
   const [showFurniture, setShowFurniture] = useState(true);
@@ -10,16 +12,20 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
   const [showWindows, setShowWindows] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
-  // Day-15: measurement state
+  // Day-15/16: measurement state
   const [measuring, setMeasuring] = useState(false);
-  const [measurePoints, setMeasurePoints] = useState([]); 
-  const [measureDistance, setMeasureDistance] = useState(null);
+  const [measurePoints, setMeasurePoints] = useState([]); // [{x,y}, {x,y}]
+  const [measureDistance, setMeasureDistance] = useState(null); // meters
+
+  // Day-17: grid toggle
+  const [showGrid, setShowGrid] = useState(true);
 
   useEffect(() => {
     if (wrapperRef.current) {
       wrapperRef.current.scrollLeft = 0;
       wrapperRef.current.scrollTop = 0;
     }
+    // reset measurement on layout change
     setMeasuring(false);
     setMeasurePoints([]);
     setMeasureDistance(null);
@@ -53,10 +59,12 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
 
     setLayout(updated);
     window.__currentLayout = updated;
+    console.log('Updated layout:', updated);
   }
 
   function selectRoom(label) {
     setSelectedRoom(label);
+    console.log('Selected room:', label);
   }
 
   function moveRoom(dx, dy) {
@@ -64,7 +72,7 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     updateRooms((rooms) => {
       const room = rooms.find(r => r.label === selectedRoom);
       if (!room) return;
-      const grid = 5;
+      const grid = GRID_SIZE; // snap to grid
       room.x = Math.round((room.x + dx) / grid) * grid;
       room.y = Math.round((room.y + dy) / grid) * grid;
     });
@@ -76,8 +84,12 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       const room = rooms.find(r => r.label === selectedRoom);
       if (!room) return;
       const minSize = 40;
-      room.w = Math.max(minSize, room.w + dw);
-      room.h = Math.max(minSize, room.h + dh);
+      let newW = room.w + dw;
+      let newH = room.h + dh;
+      if (newW < minSize) newW = minSize;
+      if (newH < minSize) newH = minSize;
+      room.w = newW;
+      room.h = newH;
     });
   }
 
@@ -94,6 +106,7 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     setSelectedRoom(trimmed);
   }
 
+  // measurement click handler
   function handleSvgClick(evt) {
     if (!measuring || !layout) return;
     const svg = document.getElementById('plan');
@@ -111,22 +124,32 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
 
       if (prev.length === 1) {
         const p0 = prev[0];
-        const dx = x - p0.x;
-        const dy = y - p0.y;
+        const p1 = { x, y };
+        const dx = p1.x - p0.x;
+        const dy = p1.y - p0.y;
         const distPx = Math.hypot(dx, dy);
 
-        const pxPerMeter = 50;
-        const distM = distPx / pxPerMeter;
+        let metersPerPx;
+        if (spec && spec.width && layout.W) {
+          metersPerPx = spec.width / layout.W;
+        } else if (spec && spec.height && layout.H) {
+          metersPerPx = spec.height / layout.H;
+        } else {
+          metersPerPx = 1 / 50; // fallback
+        }
+        const distM = distPx * metersPerPx;
         setMeasureDistance(distM);
 
-        return [p0, { x, y }];
+        return [p0, p1];
       }
 
+      // reset and start new
       setMeasureDistance(null);
       return [{ x, y }];
     });
   }
 
+  // expose helpers to window for inline SVG onclick
   useEffect(() => {
     window.__selectRoom = selectRoom;
     window.__measureClick = handleSvgClick;
@@ -148,12 +171,39 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
         onclick="window.__measureClick && window.__measureClick(evt)">
     `);
 
+    // Day-17: grid pattern
+    if (showGrid) {
+      svgParts.push(`
+        <defs>
+          <pattern id="smallGrid" width="${GRID_SIZE}" height="${GRID_SIZE}" patternUnits="userSpaceOnUse">
+            <path d="M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}" fill="none" stroke="#e5e7eb" stroke-width="0.6"/>
+          </pattern>
+          <pattern id="bigGrid" width="${GRID_SIZE * 5}" height="${GRID_SIZE * 5}" patternUnits="userSpaceOnUse">
+            <rect width="${GRID_SIZE * 5}" height="${GRID_SIZE * 5}" fill="url(#smallGrid)"/>
+            <path d="M ${GRID_SIZE * 5} 0 L 0 0 0 ${GRID_SIZE * 5}" fill="none" stroke="#d1d5db" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bigGrid)" />
+      `);
+    }
+
+    // ROOMS
     rooms.forEach(r => {
       const sel = selectedRoom === r.label;
       const fill = roomFill(r.label);
 
-      const areaSqM = ((r.w * r.h) / (50 * 50));
-      const showArea = Math.min(r.w, r.h) > 80;
+      // Day-16: area label (m²)
+      const roomAreaPx = (r.w || 0) * (r.h || 0);
+      let metersPerPx;
+      if (spec && spec.width && layout.W) {
+        metersPerPx = spec.width / layout.W;
+      } else if (spec && spec.height && layout.H) {
+        metersPerPx = spec.height / layout.H;
+      } else {
+        metersPerPx = 1 / 50;
+      }
+      const areaM2 = roomAreaPx * metersPerPx * metersPerPx;
+      const showAreaText = Math.min(r.w, r.h) > 90;
 
       svgParts.push(`
         <g class="room" onclick="window.__selectRoom && window.__selectRoom('${(r.label || '').replace(/'/g, "\\'")}')">
@@ -162,54 +212,67 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
             stroke="${sel ? '#ff3366' : '#222'}"
             stroke-width="${sel ? wallThickness + 2 : wallThickness}"
           />
-
           ${
             Math.min(r.w, r.h) > 70
-              ? `<text x="${r.x + 8}" y="${r.y + 18}" font-size="12" fill="#111" font-weight="600">${r.label}</text>`
+              ? `<text x="${r.x + 8}" y="${r.y + 18}" font-size="12" fill="#111">${r.label}</text>`
               : ''
           }
-
           ${
-            showArea
-              ? `<text x="${r.x + 8}" y="${r.y + 34}" font-size="11" fill="#444">${areaSqM.toFixed(1)} m²</text>`
+            showAreaText
+              ? `<text x="${r.x + 8}" y="${r.y + 34}" font-size="11" fill="#4b5563">${areaM2.toFixed(1)} m²</text>`
               : ''
           }
         </g>
       `);
     });
 
+    // DOORS & WINDOWS
+    let doors = [];
+    let windows = [];
     let openings = { doors: [], windows: [] };
 
     try {
-      openings = generateOpenings(layout, spec);
-    } catch {}
+      openings = generateOpenings(layout, spec) || { doors: [], windows: [] };
+      doors = openings.doors || [];
+      windows = openings.windows || [];
+    } catch (e) {
+      console.warn('generateOpenings error:', e);
+    }
 
-    if (showDoors && openings.doors.length) {
+    if (showDoors && doors.length) {
       svgParts.push(`<g class="doors">`);
-      openings.doors.forEach(d => {
-        svgParts.push(`<rect x="${d.x}" y="${d.y}" width="${d.w}" height="${d.h}"
-          fill="#d97757" stroke="#7c2d12" stroke-width="1.5" />`);
+      doors.forEach(d => {
+        svgParts.push(`
+          <rect x="${d.x}" y="${d.y}" width="${d.w}" height="${d.h}"
+            fill="#d97757" stroke="#7c2d12" stroke-width="1.5" />
+        `);
       });
       svgParts.push(`</g>`);
     }
 
-    if (showWindows && openings.windows.length) {
+    if (showWindows && windows.length) {
       svgParts.push(`<g class="windows">`);
-      openings.windows.forEach(w => {
-        svgParts.push(`<rect x="${w.x}" y="${w.y}" width="${w.w}" height="${w.h}"
-          fill="#bfdbfe" stroke="#1d4ed8" stroke-width="1.2" fill-opacity="0.9" />`);
+      windows.forEach(w => {
+        svgParts.push(`
+          <rect x="${w.x}" y="${w.y}" width="${w.w}" height="${w.h}"
+            fill="#bfdbfe" stroke="#1d4ed8" stroke-width="1.2" fill-opacity="0.9" />
+        `);
       });
       svgParts.push(`</g>`);
     }
 
+    // FURNITURE (door/window-aware)
     if (showFurniture) {
       try {
         const items = placeFurniture(layout, openings, spec);
         svgParts.push(`<g class="furniture">${furnitureItemsToSvg(items)}</g>`);
-      } catch {}
+      } catch (e) {
+        console.error('furniture render error', e);
+      }
     }
 
-    if (measurePoints.length === 2) {
+    // measurement overlay
+    if (measurePoints && measurePoints.length === 2) {
       const [p0, p1] = measurePoints;
       svgParts.push(`
         <g class="measure">
@@ -237,33 +300,55 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
   return (
     <div className="canvas">
       <div className="controls-row">
-        <button onClick={() => setScale(s => Math.min(2, s + 0.1))}>Zoom +</button>
-        <button onClick={() => setScale(s => Math.max(0.2, s - 0.1))}>Zoom -</button>
+        <button onClick={() => setScale(s => Math.min(2, +(s + 0.1).toFixed(2)))}>Zoom +</button>
+        <button onClick={() => setScale(s => Math.max(0.2, +(s - 0.1).toFixed(2)))}>Zoom -</button>
         <button onClick={() => setScale(1)}>Reset</button>
-        <div style={{marginLeft:12}}>Scale: {Math.round(scale * 100)}%</div>
+        <div className="zoom-info" style={{ marginLeft: 12 }}>Scale: {Math.round(scale * 100)}%</div>
 
-        <button onClick={() => {
-          setMeasuring(m => !m);
-          setMeasurePoints([]);
-          setMeasureDistance(null);
-        }} className="btn-outline" style={{marginLeft:12}}>
-          📏 {measuring ? "Measuring…" : "Measure"}
+        {/* Measure toggle + clear */}
+        <button
+          onClick={() => {
+            setMeasuring(m => {
+              const next = !m;
+              if (!next) {
+                setMeasurePoints([]);
+                setMeasureDistance(null);
+              }
+              return next;
+            });
+          }}
+          className="btn-outline"
+          style={{ marginLeft: 12 }}
+        >
+          📏 {measuring ? 'Measuring…' : 'Measure'}
+        </button>
+        {measurePoints.length > 0 && (
+          <button
+            onClick={() => {
+              setMeasurePoints([]);
+              setMeasureDistance(null);
+            }}
+            className="btn-outline"
+          >
+            Clear
+          </button>
+        )}
+
+        {/* Day-17: grid toggle */}
+        <button
+          onClick={() => setShowGrid(g => !g)}
+          className="btn-outline"
+        >
+          {showGrid ? 'Hide Grid' : 'Show Grid'}
         </button>
 
-        <button onClick={() => {
-          setMeasurePoints([]);
-          setMeasureDistance(null);
-        }} className="btn-outline">
-          Clear
-        </button>
-
-        <button onClick={() => setShowFurniture(s=>!s)} className="btn-outline">
+        <button onClick={() => setShowFurniture(s => !s)} className="btn-outline">
           {showFurniture ? 'Hide Furniture' : 'Show Furniture'}
         </button>
-        <button onClick={() => setShowDoors(s=>!s)} className="btn-outline">
+        <button onClick={() => setShowDoors(s => !s)} className="btn-outline">
           {showDoors ? 'Hide Doors' : 'Show Doors'}
         </button>
-        <button onClick={() => setShowWindows(s=>!s)} className="btn-outline">
+        <button onClick={() => setShowWindows(s => !s)} className="btn-outline">
           {showWindows ? 'Hide Windows' : 'Show Windows'}
         </button>
       </div>
@@ -271,20 +356,28 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       {selectedRoom && (
         <div className="room-editor">
           <strong>{selectedRoom}</strong>
-          <button onClick={() => moveRoom(0,-10)}>⬆</button>
-          <button onClick={() => moveRoom(0,10)}>⬇</button>
-          <button onClick={() => moveRoom(-10,0)}>⬅</button>
-          <button onClick={() => moveRoom(10,0)}>➡</button>
-          <button onClick={() => resizeRoom(10,0)}>Wider</button>
-          <button onClick={() => resizeRoom(-10,0)}>Narrower</button>
-          <button onClick={() => resizeRoom(0,10)}>Taller</button>
-          <button onClick={() => resizeRoom(0,-10)}>Shorter</button>
-          <button onClick={renameRoom}>Rename</button>
+
+          <div className="edit-buttons">
+            <button onClick={() => moveRoom(0, -GRID_SIZE)}>⬆</button>
+            <button onClick={() => moveRoom(0, GRID_SIZE)}>⬇</button>
+            <button onClick={() => moveRoom(-GRID_SIZE, 0)}>⬅</button>
+            <button onClick={() => moveRoom(GRID_SIZE, 0)}>➡</button>
+          </div>
+
+          <div className="resize-buttons">
+            <span style={{ fontSize: 12, marginRight: 6 }}>Resize:</span>
+            <button onClick={() => resizeRoom(GRID_SIZE, 0)}>Wider</button>
+            <button onClick={() => resizeRoom(-GRID_SIZE, 0)}>Narrower</button>
+            <button onClick={() => resizeRoom(0, GRID_SIZE)}>Taller</button>
+            <button onClick={() => resizeRoom(0, -GRID_SIZE)}>Shorter</button>
+          </div>
+
+          <button style={{ marginTop: 8 }} onClick={renameRoom}>Rename Room</button>
         </div>
       )}
 
       <div ref={wrapperRef} style={containerStyle}>
-        <div style={{transform:`scale(${scale})`, transformOrigin:'top left'}}>
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', display: 'inline-block' }}>
           <div
             dangerouslySetInnerHTML={{
               __html: layout
@@ -300,6 +393,15 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
           Distance: {measureDistance.toFixed(2)} m
         </div>
       )}
+
+      <div className="door-window-legend">
+        <div className="legend-chip">
+          <span className="legend-swatch legend-door" /> <span>Main Door / Doors</span>
+        </div>
+        <div className="legend-chip">
+          <span className="legend-swatch legend-window" /> <span>Windows</span>
+        </div>
+      </div>
     </div>
   );
 }
