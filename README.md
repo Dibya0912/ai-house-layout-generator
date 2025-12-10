@@ -513,6 +513,8 @@ Zoom controls	Grid scales perfectly with view
 
 
 
+
+
 🛠️ Tech Stack
 Area	Technology
 Frontend	React + Vite
