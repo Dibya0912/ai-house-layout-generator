@@ -4,6 +4,7 @@ import { placeFurniture, furnitureItemsToSvg } from '../utils/furnitureEngine';
 import { generateOpenings } from '../utils/layoutEngine';
 
 const GRID_SIZE = 20; // px – used for both grid lines and snapping
+const PX_PER_METER_FALLBACK = 50; // keep consistent with layoutEngine pxPerMeter
 
 export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, setScale = () => {} }) {
   const wrapperRef = useRef(null);
@@ -12,12 +13,12 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
   const [showWindows, setShowWindows] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
-  // Day-15/16: measurement state
+  // Measurement state
   const [measuring, setMeasuring] = useState(false);
   const [measurePoints, setMeasurePoints] = useState([]); // [{x,y}, {x,y}]
   const [measureDistance, setMeasureDistance] = useState(null); // meters
 
-  // Day-17: grid toggle
+  // Grid toggle
   const [showGrid, setShowGrid] = useState(true);
 
   useEffect(() => {
@@ -112,9 +113,13 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     const svg = document.getElementById('plan');
     if (!svg) return;
 
+    // support both MouseEvent and Synthetic events passed from inline handler
+    const clientX = evt.clientX ?? (evt.pageX || 0);
+    const clientY = evt.clientY ?? (evt.pageY || 0);
+
     const rect = svg.getBoundingClientRect();
-    const x = ((evt.clientX - rect.left) / rect.width) * layout.W;
-    const y = ((evt.clientY - rect.top) / rect.height) * layout.H;
+    const x = ((clientX - rect.left) / rect.width) * layout.W;
+    const y = ((clientY - rect.top) / rect.height) * layout.H;
 
     setMeasurePoints(prev => {
       if (prev.length === 0) {
@@ -129,13 +134,14 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
         const dy = p1.y - p0.y;
         const distPx = Math.hypot(dx, dy);
 
+        // px -> meter conversion (consistent fallback)
         let metersPerPx;
         if (spec && spec.width && layout.W) {
           metersPerPx = spec.width / layout.W;
         } else if (spec && spec.height && layout.H) {
           metersPerPx = spec.height / layout.H;
         } else {
-          metersPerPx = 1 / 50; // fallback
+          metersPerPx = 1 / PX_PER_METER_FALLBACK;
         }
         const distM = distPx * metersPerPx;
         setMeasureDistance(distM);
@@ -149,7 +155,7 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
     });
   }
 
-  // expose helpers to window for inline SVG onclick
+  // expose helpers to window for inline SVG onclick (mount/unmount)
   useEffect(() => {
     window.__selectRoom = selectRoom;
     window.__measureClick = handleSvgClick;
@@ -157,7 +163,7 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       delete window.__selectRoom;
       delete window.__measureClick;
     };
-  });
+  }, []);
 
   function layoutToSvg(layout) {
     if (!layout) return '';
@@ -168,10 +174,10 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       <svg id="plan" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
         xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"
         style="background:#fff; border:1px solid #ccc;"
-        onclick="window.__measureClick && window.__measureClick(evt)">
+        onclick="window.__measureClick && window.__measureClick(event)">
     `);
 
-    // Day-17: grid pattern
+    // Grid pattern (if enabled)
     if (showGrid) {
       svgParts.push(`
         <defs>
@@ -192,17 +198,14 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       const sel = selectedRoom === r.label;
       const fill = roomFill(r.label);
 
-      // Day-16: area label (m²)
+      // area calculation (m^2) with consistent fallback
       const roomAreaPx = (r.w || 0) * (r.h || 0);
-      let metersPerPx;
-      if (spec && spec.width && layout.W) {
-        metersPerPx = spec.width / layout.W;
-      } else if (spec && spec.height && layout.H) {
-        metersPerPx = spec.height / layout.H;
-      } else {
-        metersPerPx = 1 / 50;
-      }
-      const areaM2 = roomAreaPx * metersPerPx * metersPerPx;
+      const metersPerPxForArea = (spec && spec.width && layout.W)
+        ? spec.width / layout.W
+        : (spec && spec.height && layout.H)
+          ? spec.height / layout.H
+          : 1 / PX_PER_METER_FALLBACK;
+      const areaM2 = roomAreaPx * metersPerPxForArea * metersPerPxForArea;
       const showAreaText = Math.min(r.w, r.h) > 90;
 
       svgParts.push(`
@@ -334,7 +337,7 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
           </button>
         )}
 
-        {/* Day-17: grid toggle */}
+        {/* Grid toggle */}
         <button
           onClick={() => setShowGrid(g => !g)}
           className="btn-outline"
@@ -389,17 +392,17 @@ export default function SvgCanvas({ layout, setLayout, spec = {}, scale = 1, set
       </div>
 
       {measureDistance && (
-        <div className="measure-info">
+        <div className="measure-info" style={{ marginTop: 8, color: '#ddd' }}>
           Distance: {measureDistance.toFixed(2)} m
         </div>
       )}
 
-      <div className="door-window-legend">
-        <div className="legend-chip">
-          <span className="legend-swatch legend-door" /> <span>Main Door / Doors</span>
+      <div className="door-window-legend" style={{ marginTop: 10 }}>
+        <div className="legend-chip" style={{ marginBottom: 6 }}>
+          <span className="legend-swatch legend-door" /> <span style={{ marginLeft: 6 }}>Main Door / Doors</span>
         </div>
         <div className="legend-chip">
-          <span className="legend-swatch legend-window" /> <span>Windows</span>
+          <span className="legend-swatch legend-window" /> <span style={{ marginLeft: 6 }}>Windows</span>
         </div>
       </div>
     </div>
