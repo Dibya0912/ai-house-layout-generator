@@ -508,6 +508,50 @@ Zoom controls	Grid scales perfectly with view
 
 
 
+🚀 Day 18 — Snap-to-Grid + Auto Area Labels + Polished Measurement Tool
+
+Today’s update makes the UI feel much more professional, smooth, and precise.
+We added a full blueprint-style grid, snap-to-grid movement, auto area calculation, and improved the measurement workflow.
+
+✅ What’s New Today
+1. Snap-to-Grid Movement (20px grid)
+
+All room movements now snap exactly to the grid.
+
+Feels more like a real CAD tool.
+
+Prevents messy or uneven coordinates.
+
+2. Grid Overlay (Light + Dark Lines)
+
+Added SVG grid with:
+
+Small grid: 20px
+
+Big grid: 100px (highlighted)
+
+User can toggle the grid ON/OFF.
+
+3. Automatic Area Labels (m²)
+
+Rooms now automatically display their area in square meters.
+
+Smart visibility:
+
+Only shows if room is large enough (for clean visuals).
+
+Fully respects scaling + spec width/height → accurate real measurements.
+
+4. Measurement Tool Polished
+
+Click two points → auto distance in meters.
+
+Reset when changing layout.
+
+Shows measurement line + two markers.
+
+Cleaner UX + accurate meter conversion.
+
 
 
 
