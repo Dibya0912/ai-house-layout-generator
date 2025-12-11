@@ -356,3 +356,8 @@ button.btn-outline{ background:transparent; border:1px solid rgba(255,255,255,0.
   background: #bfdbfe;
   border-color: #1d4ed8;
 }
+.measure-info{
+  margin-top:8px;
+  font-size:13px;
+  color:#f97316; /* nice orange accent */
+}
