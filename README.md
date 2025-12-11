@@ -554,11 +554,61 @@ Cleaner UX + accurate meter conversion.
 
 
 
+📅 Day 19 — Theme System + UI Polish + Measurement Fixes
 
+Today the app received a full UI upgrade, including:
 
+✅ 1. Dark / Light Theme Toggle
 
+Global color system added using CSS variables.
 
+Body now switches classes:
 
+theme-dark
+
+theme-light
+
+All components automatically adapt.
+
+✅ 2. Modern UI Styling
+
+New polished layout
+
+Cleaner buttons
+
+Better spacing, rounded panels
+
+Improved canvas background & shadows
+
+Updated legends, room editor styling
+
+✅ 3. Measurement Bug Fixes
+
+Cross-browser stable click detection
+
+Works even when zoomed
+
+Uses consistent px → meter conversion
+
+Distance text now uses theme colors
+
+✅ 4. Grid System Polished
+
+Big + small grid patterns
+
+Toggle button added
+
+Grid aligns with room snapping (20px)
+
+✅ 5. Code Clean-up & Safety Improvements
+
+Safer inline SVG event handling
+
+Unified measurement fallback
+
+Removed noisy console logs
+
+Clearer variable naming
 
 
 🛠️ Tech Stack
