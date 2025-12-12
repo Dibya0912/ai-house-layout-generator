@@ -611,6 +611,12 @@ Removed noisy console logs
 Clearer variable naming
 
 
+
+
+
+
+
+
 🛠️ Tech Stack
 Area	Technology
 Frontend	React + Vite
