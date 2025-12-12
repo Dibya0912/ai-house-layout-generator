@@ -1,6 +1,9 @@
 // src/components/VariantsPanel.jsx
 import React from 'react';
 
+// NOTE: Removed the local CSS import to avoid missing-file errors.
+// If you want custom styles, create src/components/variantsPanel.css and import it here.
+
 export default function VariantsPanel({ variants = [], onSelect, selectedId }) {
   if (!variants || variants.length === 0) return <div style={{padding:12}}>No variants yet</div>;
 
@@ -14,7 +17,8 @@ export default function VariantsPanel({ variants = [], onSelect, selectedId }) {
           return (
             <div key={v.id} style={{position:'relative'}}>
               <button onClick={()=>onSelect(v)} style={{
-                padding:0, border: selected ? '2px solid #06b6d4' : '1px solid #333',
+                padding:0,
+                border: selected ? '2px solid #06b6d4' : '1px solid #333',
                 background:'#fff', cursor:'pointer', borderRadius:6, overflow:'hidden', width:'100%', height:'80px'
               }} dangerouslySetInnerHTML={{__html: svg}} />
               <div style={{
@@ -38,7 +42,8 @@ function layoutToThumbSvg(layout){
   const parts = [];
   parts.push(`<svg width="${w}" height="${h}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">`);
   rooms.forEach(r=>{
-    parts.push(`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#fff" stroke="#222" stroke-width="${2/scale}"/>`);
+    // keep fill light so thumbnail visible on dark UI
+    parts.push(`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#ffffff" stroke="#222" stroke-width="${Math.max(1, 2/scale)}"/>`);
   });
   parts.push(`</svg>`);
   return parts.join('');
