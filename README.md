@@ -21,7 +21,7 @@ Base folder structure created
 Added core components:
 
 InputPanel
-
+.
 
 SvgCanvas
 
