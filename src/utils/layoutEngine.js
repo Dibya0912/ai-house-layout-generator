@@ -45,12 +45,14 @@ function jitterLayout(layout) {
     const dy = Math.round((Math.random() - 0.5) * 2 * maxShiftY);
     const dw = Math.round((Math.random() - 0.5) * 2 * Math.max(1, Math.round(W * 0.02)));
     const dh = Math.round((Math.random() - 0.5) * 2 * Math.max(1, Math.round(H * 0.02)));
+    const w = Math.max(20, Math.min(W, r.w + dw));
+    const h = Math.max(20, Math.min(H, r.h + dh));
     return {
       ...r,
-      x: Math.max(0, Math.min(W - 10, r.x + dx)),
-      y: Math.max(0, Math.min(H - 10, r.y + dy)),
-      w: Math.max(20, Math.min(W, r.w + dw)),
-      h: Math.max(20, Math.min(H, r.h + dh))
+      x: Math.max(0, Math.min(W - w, r.x + dx)),
+      y: Math.max(0, Math.min(H - h, r.y + dy)),
+      w,
+      h
     };
   });
   return { W, H, rooms: newRooms };
